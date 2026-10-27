@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TVDrop</string>
+    <string name="no_network">No Wi-Fi connection</string>
+    <string name="hint">Open the address above in your phone or laptop browser to drop an APK or paste a link. Press OK on a file to install or delete it.</string>
+    <string name="url_hint">…or type a link here (painful, but works)</string>
+    <string name="empty">Nothing downloaded yet</string>
+    <string name="install">Install</string>
+    <string name="open">Open</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="keep">Keep</string>
+    <string name="always_delete">Always delete</string>
+    <string name="installed_title">%1$s installed</string>
+    <string name="installed_msg">Delete %1$s (%2$s)?</string>
+    <string name="deleted">Deleted %1$s</string>
+    <string name="install_cancelled">Install cancelled</string>
+    <string name="install_failed">Install failed</string>
+    <string name="allow_sources">Turn on “TVDrop”, then press Back — the install continues</string>
+    <string name="downloading">Downloading…</string>
+    <string name="uploading">Receiving…</string>
+    <string name="failed">Failed: %1$s</string>
+</resources>
