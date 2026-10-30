@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TVDrop — install APKs on your Android TV from any browser</title>
+<meta name="description" content="TVDrop runs a tiny web server on your Android TV. Open it from your phone or laptop, drop an APK or paste a link, and the TV installs it. No adb, no USB stick, no typing URLs with a remote.">
+<meta property="og:title" content="TVDrop">
+<meta property="og:description" content="Drop an APK onto your Android TV from any browser on the same Wi-Fi.">
+<meta property="og:image" content="https://ashutosh091.github.io/TVDrop/img/tv-home.png">
+<link rel="icon" href="img/icon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#0d0d12; --panel:#16161e; --panel2:#1d1d28; --line:#2a2a38;
+  --text:#ececf1; --muted:#9a9aab; --accent:#2d6cdf; --accent2:#5b8ff0; --ok:#3fb27f;
+  --radius:14px; --max:1080px;
+}
+@media (prefers-color-scheme: light){
+  :root{--bg:#f7f7fa;--panel:#ffffff;--panel2:#f0f1f6;--line:#e1e2ea;--text:#16161e;--muted:#5d5d6e;--accent:#2557c4;--accent2:#2d6cdf}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent2)}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+header.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;color:var(--text);text-decoration:none}
+.nav nav a{color:var(--muted);text-decoration:none;margin-left:22px;font-size:15px}
+.nav nav a:hover{color:var(--text)}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center;padding:48px 0 64px}
+.hero h1{font-size:clamp(34px,5vw,54px);line-height:1.08;margin:0 0 18px;letter-spacing:-.02em}
+.hero h1 span{color:var(--accent2)}
+.hero p.lead{font-size:19px;color:var(--muted);margin:0 0 28px;max-width:34em}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border-radius:12px;font-weight:600;text-decoration:none;font-size:16px}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent2)}
+.btn.ghost{border:1px solid var(--line);color:var(--text)}
+.btn.ghost:hover{background:var(--panel2)}
+.fine{color:var(--muted);font-size:14px;margin-top:14px}
+.shot{border-radius:var(--radius);border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.35);width:100%;height:auto;display:block}
+.hero-art{position:relative}
+.hero-art .phone{height:auto;position:absolute;width:34%;right:-14px;bottom:-34px;border-radius:18px;border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.5)}
+section{padding:64px 0;border-top:1px solid var(--line)}
+section h2{font-size:30px;margin:0 0 10px;letter-spacing:-.01em}
+section p.sub{color:var(--muted);margin:0 0 32px;max-width:44em}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.card h3{margin:0 0 6px;font-size:17px}
+.card p{margin:0;color:var(--muted);font-size:15px}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:14px}
+.steps li{counter-increment:s;position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px 18px 66px}
+.steps li::before{content:counter(s);position:absolute;left:20px;top:17px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:grid;place-items:center;font-size:15px}
+.steps li b{display:block;margin-bottom:2px}
+.steps li span{color:var(--muted);font-size:15px}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+code,kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+pre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto;font-size:14px;margin:10px 0 0}
+pre code{background:none;border:0;padding:0}
+.gallery{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px;align-items:start}
+.gallery figure{margin:0}
+.gallery figcaption{color:var(--muted);font-size:14px;margin-top:8px}
+.gallery .col{display:grid;gap:18px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px}
+details summary{cursor:pointer;font-weight:600}
+details p{color:var(--muted);margin:10px 0 0}
+footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+@media (max-width:860px){
+  .hero{grid-template-columns:minmax(0,1fr);gap:56px;padding-top:24px}
+  .hero-art .phone{right:6px;bottom:-28px;width:30%}
+  .grid3,.tabs,.gallery{grid-template-columns:minmax(0,1fr)}
+  .gallery figure:last-child{max-width:320px}
+  .nav nav a{margin-left:14px}
+  .nav nav a.hide-sm{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="nav">
+    <a class="brand" href="#"><img src="img/icon.svg" width="30" height="30" alt="">TVDrop</a>
+    <nav>
+      <a href="#how" class="hide-sm">How it works</a>
+      <a href="#install">Install</a>
+      <a href="#faq" class="hide-sm">FAQ</a>
+      <a href="https://github.com/ashutosh091/TVDrop">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Install apps on your TV <span>from any browser.</span></h1>
+      <p class="lead">TVDrop runs a tiny web page on your Android TV. Open it on your phone or laptop, drop an APK or paste a download link, and the TV installs it. No adb, no USB stick, no typing long URLs with a remote.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/ashutosh091/TVDrop/releases/latest/download/tvdrop.apk">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 17v3h16v-3"/></svg>
+          Download APK</a>
+        <a class="btn ghost" href="#install">Setup guide</a>
+      </div>
+      <p class="fine">Free and open source · Android 7.0+ · ~90 KB · No accounts, no tracking, no internet needed</p>
+    </div>
+    <div class="hero-art">
+      <img class="shot" src="img/tv-home.png" alt="TVDrop on the TV, showing its address and the files sent to it" width="1920" height="1080">
+      <img class="phone" src="img/web-phone.png" alt="The TVDrop page in a phone browser" width="780" height="1040">
+    </div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="sub">The app shows an address like <code>http://192.168.1.20:8766</code>. Anything on the same Wi-Fi can open it.</p>
+    <div class="grid3">
+      <div class="card"><h3>Drop a file</h3><p>Drag an APK onto the page, or tap to pick one on your phone. It goes straight to the TV and the installer opens.</p></div>
+      <div class="card"><h3>Or paste a link</h3><p>Give it a download URL and the TV fetches the file itself. Redirects and GitHub release links work.</p></div>
+      <div class="card"><h3>Clean up after</h3><p>After a successful install TVDrop offers to delete the APK: Delete, Keep, or Always delete.</p></div>
+      <div class="card"><h3>Remote friendly</h3><p>Everything also works from the TV: press OK on a file to install, open or delete it.</p></div>
+      <div class="card"><h3>Not just APKs</h3><p>Send any file. Non-APK files open in whatever app on the TV handles them.</p></div>
+      <div class="card"><h3>Tiny and local</h3><p>No cloud, no account, no third-party libraries. The server only runs on your network while the app is alive.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>Screenshots</h2>
+    <p class="sub">Captured on an Android TV 13 emulator and a desktop browser.</p>
+    <div class="gallery">
+      <div class="col">
+        <figure><img class="shot" src="img/tv-actions.png" alt="Pressing OK on a file on the TV offers Install or Delete" width="1920" height="1080" loading="lazy"><figcaption>On the TV: press OK on a file to install or delete it.</figcaption></figure>
+        <figure><img class="shot" src="img/web-desktop.png" alt="The TVDrop page in a desktop browser" width="1280" height="760" loading="lazy"><figcaption>From a laptop: drag APKs onto the page.</figcaption></figure>
+      </div>
+      <figure><img class="shot" src="img/web-phone.png" alt="The TVDrop page on a phone" width="780" height="1040" loading="lazy"><figcaption>From a phone: tap to pick an APK or paste a link.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Setup guide</h2>
+    <p class="sub">You only need to get TVDrop onto the TV once. After that every app, including TVDrop updates, goes through TVDrop.</p>
+
+    <h3 style="margin:0 0 14px">1. Get TVDrop onto the TV (pick one)</h3>
+    <div class="tabs">
+      <div class="card">
+        <h3>With the Downloader app</h3>
+        <p>Install <b>Downloader</b> by AFTVnews from the TV's app store. Open it and enter:</p>
+        <pre><code>ashutosh091.github.io/TVDrop</code></pre>
+        <p style="margin-top:10px">Press <b>Download APK</b> on this page, then <b>Install</b>.</p>
+      </div>
+      <div class="card">
+        <h3>With a computer and adb</h3>
+        <p>Turn on <b>Developer options → USB / network debugging</b> on the TV, then:</p>
+        <pre><code>adb connect &lt;tv-ip&gt;:5555
+adb install tvdrop.apk</code></pre>
+      </div>
+      <div class="card">
+        <h3>With a USB stick</h3>
+        <p>Copy <code>tvdrop.apk</code> to a USB drive, plug it into the TV and open it with any file manager app on the TV.</p>
+      </div>
+    </div>
+
+    <h3 style="margin:36px 0 14px">2. Send apps to the TV</h3>
+    <ol class="steps">
+      <li><b>Open TVDrop on the TV.</b><span>It shows its address at the top right, for example <code>http://192.168.1.20:8766</code>.</span></li>
+      <li><b>Open that address on your phone or laptop.</b><span>Both devices must be on the same Wi-Fi or home network.</span></li>
+      <li><b>Drop an APK, or paste a download link.</b><span>The file lands on the TV and, with the box ticked, the installer opens right away.</span></li>
+      <li><b>First time only: allow installs.</b><span>Android opens "Install unknown apps". Turn it on for TVDrop and press Back. The install continues by itself.</span></li>
+      <li><b>Confirm on the TV.</b><span>Press Install with the remote. TVDrop then asks whether to delete the APK.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>FAQ</h2>
+    <details><summary>Which devices does it work on?</summary><p>Anything running Android 7.0 or newer: Android TV and Google TV boxes and TVs (Chromecast with Google TV, Nvidia Shield, Xiaomi Mi Box, Sony, TCL, Philips and others). It is developed and tested on the Android TV emulator. Fire TV runs Android underneath and should work too, but it is untested. It also runs on phones and tablets.</p></details>
+    <details><summary>Is it safe to run a server on my TV?</summary><p>The page is only reachable from your local network while TVDrop is running. Anyone on the same Wi-Fi can send files to it, but nothing is installed without you pressing Install on the TV. The server rejects requests from other websites and from DNS rebinding tricks, and file names are confined to TVDrop's own folder. Avoid leaving it open on untrusted networks.</p></details>
+    <details><summary>The page does not open from my phone.</summary><p>Check that the phone is on the same network as the TV, not mobile data or a guest Wi-Fi. Keep TVDrop open on the TV. Some routers isolate wireless clients; turn off "AP isolation" or "client isolation" if that is on.</p></details>
+    <details><summary>Where are the files stored?</summary><p>In TVDrop's own app folder on the TV. Uninstalling TVDrop removes them. Use Delete in the app or on the page to free space.</p></details>
+    <details><summary>Does it need root or any special permission?</summary><p>No. It only uses the standard "install unknown apps" permission, which Android asks you to grant once.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>TVDrop · MIT licensed · <a href="https://github.com/ashutosh091/TVDrop">Source on GitHub</a></span>
+    <span><a href="https://github.com/ashutosh091/TVDrop/releases">All releases</a> · <a href="https://github.com/ashutosh091/TVDrop/issues">Report an issue</a></span>
+  </div>
+</footer>
+</body>
+</html>

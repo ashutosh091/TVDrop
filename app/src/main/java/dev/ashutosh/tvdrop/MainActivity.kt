@@ -29,7 +29,7 @@ class MainActivity : Activity() {
     private var pending: File? = null   // APK whose installer is showing
     private val listener = { runOnUiThread { refresh() } }
 
-    // Backup for boxes whose installer doesn't return a result: the package appearing means it worked.
+    // Backup for devices whose installer doesn't return a result: the package appearing means it worked.
     private val installed = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val file = pending ?: return

@@ -15,7 +15,7 @@ import java.net.URLDecoder
 import kotlin.concurrent.thread
 
 /**
- * Tiny HTTP server: a phone or laptop on the same Wi-Fi opens http://<box>:8766, drops an APK
+ * Tiny HTTP server: a phone or laptop on the same Wi-Fi opens http://<tv-ip>:8766, drops an APK
  * (PUT /upload, raw body — no multipart parsing needed) or pastes a link, then installs from there.
  */
 class Server(private val app: Context) {
@@ -45,6 +45,12 @@ class Server(private val app: Context) {
             headers[line.substringBefore(':').trim().lowercase()] = line.substringAfter(':', "").trim()
         }
         val path = target.substringBefore('?')
+        // DNS rebinding guard: the page is only ever reached by IP (or localhost via adb forward).
+        val host = headers["host"].orEmpty().substringBeforeLast(':').removePrefix("[").removeSuffix("]")
+        if (!(host == "localhost" || IP.matches(host) || ':' in host)) return reply(client, 403, "text/plain", "Open TVDrop by its IP address")
+        // CSRF guard: other web pages can't send custom headers cross-origin without a CORS preflight we never answer.
+        val mutating = path != "/" && path != "/list"
+        if (mutating && headers["x-tvdrop"] != "1") return reply(client, 403, "text/plain", "missing X-TVDrop header")
         val query = target.substringAfter('?', "").split('&').filter { it.contains('=') }
             .associate { it.substringBefore('=') to URLDecoder.decode(it.substringAfter('='), "UTF-8") }
         val name = query["f"].orEmpty()
@@ -77,6 +83,10 @@ class Server(private val app: Context) {
             }
         }.getOrElse { Triple(400, "application/json", JSONObject().put("error", it.message ?: "error").toString()) }
 
+        reply(client, status, type, body)
+    }
+
+    private fun reply(client: Socket, status: Int, type: String, body: String) {
         val bytes = body.toByteArray()
         client.getOutputStream().use {
             it.write(
@@ -109,6 +119,7 @@ class Server(private val app: Context) {
 
     companion object {
         const val PORT = 8766
+        private val IP = Regex("""\d{1,3}(\.\d{1,3}){3}""")
 
         fun address(): String? = runCatching {
             NetworkInterface.getNetworkInterfaces().toList()
@@ -123,8 +134,10 @@ class Server(private val app: Context) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TVDrop</title>
 <style>
-  body{font-family:system-ui,sans-serif;background:#111;color:#eee;margin:0;padding:20px;max-width:640px}
-  h1{font-size:20px;margin:0 0 16px}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;background:#111;color:#eee;margin:0 auto;padding:20px;max-width:640px}
+  h1{font-size:22px;margin:4px 0 16px;display:flex;align-items:center;gap:10px}
+  h1 svg{flex:none}
   #drop{border:2px dashed #444;border-radius:12px;padding:28px;text-align:center;color:#aaa;cursor:pointer}
   #drop.over{border-color:#2d6cdf;color:#eee;background:#16203a}
   #drop input{display:none}
@@ -142,7 +155,7 @@ class Server(private val app: Context) {
   li button{margin:6px 6px 0 0;padding:8px 12px;font-size:14px}
   #status{color:#8ab4ff;font-size:14px;min-height:18px}
 </style></head><body>
-<h1>TVDrop</h1>
+<h1><svg width="28" height="28" viewBox="0 0 108 108"><rect width="108" height="108" rx="24" fill="#1c1c26"/><path fill="#2D6CDF" d="M48,28h12v22h11l-17,18l-17,-18h11z"/><path fill="none" stroke="#2D6CDF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M34,64v14h40v-14"/></svg>TVDrop</h1>
 <div id="drop">Drop an APK here or tap to choose<input type="file" id="file" multiple></div>
 <label class="c"><input type="checkbox" id="auto" checked> Open the installer on the TV after upload</label>
 <div id="status"></div>
@@ -152,7 +165,7 @@ class Server(private val app: Context) {
 const q=s=>document.querySelector(s), enc=encodeURIComponent;
 const human=n=>n<0?'?':n<1024?n+' B':n<1048576?(n/1024).toFixed(0)+' KB':(n/1048576).toFixed(1)+' MB';
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
-async function post(p){const r=await fetch(p,{method:'POST'});const j=await r.json().catch(()=>({}));if(j.error)q('#status').textContent=j.error;refresh()}
+async function post(p){const r=await fetch(p,{method:'POST',headers:{'X-TVDrop':'1'}});const j=await r.json().catch(()=>({}));if(j.error)q('#status').textContent=j.error;refresh()}
 async function refresh(){
   const items=await (await fetch('/list')).json(), ul=q('#list'); ul.innerHTML='';
   if(!items.length){ul.appendChild(el('li','s','Nothing on the TV yet'));return}
@@ -175,7 +188,7 @@ async function refresh(){
   }
 }
 function upload(file){
-  const x=new XMLHttpRequest(); x.open('PUT','/upload?name='+enc(file.name));
+  const x=new XMLHttpRequest(); x.open('PUT','/upload?name='+enc(file.name)); x.setRequestHeader('X-TVDrop','1');
   x.upload.onprogress=e=>{q('#status').textContent='Uploading '+file.name+' '+Math.round(e.loaded*100/e.total)+'%';refresh()};
   x.onload=()=>{ if(x.status!=200){q('#status').textContent='Upload failed: '+x.responseText;return}
     q('#status').textContent='Uploaded '+file.name; refresh();

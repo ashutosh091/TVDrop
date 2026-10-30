@@ -11,7 +11,7 @@
         android:name=".App"
         android:allowBackup="false"
         android:banner="@drawable/banner"
-        android:icon="@drawable/banner"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
@@ -27,7 +27,7 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Clicking an .apk link in a browser on the box offers this app. -->
+            <!-- Clicking an .apk link in a browser on the TV offers this app. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

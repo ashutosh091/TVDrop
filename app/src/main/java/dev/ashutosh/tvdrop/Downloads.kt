@@ -10,7 +10,7 @@ import java.net.URLDecoder
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.concurrent.thread
 
-/** Files on the box: in-flight downloads/uploads plus whatever already sits in the folder. */
+/** Files on the TV: in-flight downloads/uploads plus whatever already sits in the folder. */
 object Downloads {
     enum class Status { DOWNLOADING, UPLOADING, DONE, FAILED }
 
@@ -57,13 +57,18 @@ object Downloads {
         return items
     }
 
+    /** Names arrive from the network: only plain file names inside [dir] are accepted. */
+    private fun safe(name: String): Boolean =
+        name.isNotBlank() && '/' !in name && '\\' !in name && name != "." && name != ".."
+
     @Synchronized
     fun get(name: String): Item? =
-        active[name] ?: File(dir, name).takeIf { it.isFile }
+        if (!safe(name)) null else active[name] ?: File(dir, name).takeIf { it.isFile }
             ?.let { f -> Item(f.name, Status.DONE).apply { done = f.length(); total = f.length() } }
 
     @Synchronized
     fun delete(name: String): Boolean {
+        if (!safe(name)) return false
         active.remove(name)?.cancelled = true
         val ok = File(dir, name).delete()
         File(dir, "$name.part").delete()
