@@ -38,5 +38,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" tvdrop.apk tvdrop.apk.sha256 \
-            --title "TVDrop $GITHUB_REF_NAME" --generate-notes
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" tvdrop.apk tvdrop.apk.sha256 --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" tvdrop.apk tvdrop.apk.sha256 \
+              --title "TVDrop $GITHUB_REF_NAME" --generate-notes
+          fi
